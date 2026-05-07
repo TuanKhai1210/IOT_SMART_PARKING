@@ -1,0 +1,67 @@
+﻿@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam nodesep 35
+skinparam ranksep 35
+skinparam defaultTextAlignment center
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+actor "System\nAdministrator" as Admin
+actor "Parking\nOperator" as Operator
+
+Admin -[hidden]down- Operator
+
+rectangle "\nAdministration and Audit" {
+
+  usecase "Configure Pricing\nPolicies" as UC1
+  usecase "Configure Parking\nPrivileges" as UC2
+  usecase "Manage Local\nRole Permissions" as UC3
+  usecase "Synchronize\nReference Data" as UC4
+  usecase "Review Audit\nLogs" as UC5
+  usecase "Generate Operational\nReport" as UC6
+  usecase "Generate Financial\nReport" as UC7
+  usecase "View System\nAlerts" as UC8
+
+  UC1 -[hidden]right- UC2
+  UC2 -[hidden]right- UC3
+
+  UC4 -[hidden]right- UC5
+  UC5 -[hidden]right- UC6
+
+  UC6 -[hidden]right- UC7
+  UC8 -[hidden]down- UC5
+}
+
+actor "HCMUT_DATACORE" as DATA
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC6
+Admin --> UC7
+
+Operator --> UC5
+Operator --> UC8
+
+DATA --> UC4
+
+UC3 ..> UC4 : <<include>>
+UC6 ..> UC5 : <<include>>
+UC7 ..> UC5 : <<include>>
+
+@enduml

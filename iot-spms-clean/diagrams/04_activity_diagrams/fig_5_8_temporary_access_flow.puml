@@ -1,0 +1,37 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+
+start
+
+:Visitor or No-ID user requests temporary access;
+:Collect required temporary information;
+
+if (Information complete?) then (Yes)
+    :Validate temporary parking policy;
+    if (Temporary access allowed?) then (Yes)
+        :Issue temporary ticket;
+        :Create temporary parking session;
+        :Record temporary entry;
+        :Open gate;
+        :Display / print ticket;
+    else (No)
+        :Reject temporary access;
+        :Display policy restriction;
+        :Record rejection;
+    endif
+else (No)
+    :Ask for correction;
+    if (Operator assists?) then (Yes)
+        :Operator enters information;
+        :Revalidate information;
+    else (No)
+        :Cancel request;
+    endif
+endif
+
+stop
+
+@enduml

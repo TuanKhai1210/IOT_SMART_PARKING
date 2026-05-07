@@ -1,0 +1,25 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+
+[*] --> Unknown
+
+Unknown --> Available : valid empty signal
+Unknown --> Occupied : valid occupied signal
+
+Available --> Occupied : vehicle detected
+Occupied --> Available : vehicle leaves
+
+Available --> Stale : no update within threshold
+Occupied --> Stale : no update within threshold
+
+Stale --> Available : valid empty signal received
+Stale --> Occupied : valid occupied signal received
+Stale --> Faulty : fault confirmed
+
+Faulty --> Unknown : device reset / operator confirmation
+Unknown --> [*]
+
+@enduml

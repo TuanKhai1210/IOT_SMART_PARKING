@@ -1,0 +1,51 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+
+start
+
+:User arrives at entry gate;
+:User submits ID card or temporary access request;
+
+if (University member?) then (Yes)
+    :Authenticate through HCMUT_SSO;
+    if (Authentication successful?) then (Yes)
+        :Retrieve role-related data;
+        :Check parking privilege;
+    else (No)
+        :Reject entry;
+        :Record failed authentication;
+        stop
+    endif
+else (Visitor / No-ID user)
+    :Collect temporary access information;
+    if (Information valid?) then (Yes)
+        :Issue temporary ticket;
+    else (No)
+        :Reject temporary request;
+        :Record failed temporary request;
+        stop
+    endif
+endif
+
+if (Parking access permitted?) then (Yes)
+    :Check parking availability;
+    if (Space available?) then (Yes)
+        :Create parking session;
+        :Record entry event;
+        :Open gate;
+        :Display entry approval;
+    else (No)
+        :Display parking full;
+        :Suggest alternative zone if available;
+    endif
+else (No)
+    :Reject entry;
+    :Record denied access;
+endif
+
+stop
+
+@enduml

@@ -1,0 +1,69 @@
+﻿@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam nodesep 35
+skinparam ranksep 35
+skinparam defaultTextAlignment center
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+actor "Parking User" as User
+actor "Parking\nOperator" as Operator
+
+User -[hidden]down- Operator
+
+rectangle "\nIoT Monitoring and Parking Guidance" {
+
+  usecase "Receive Occupancy\nData" as UC1
+  usecase "Validate Sensor\nData" as UC2
+  usecase "Update Slot / Zone\nAvailability" as UC3
+  usecase "Detect Sensor /\nGateway Fault" as UC4
+  usecase "Determine Zone\nState" as UC5
+  usecase "Update Electronic\nSignage" as UC6
+  usecase "View Availability\nand Guidance" as UC7
+  usecase "Suggest Alternative\nZone" as UC8
+
+  UC1 -[hidden]right- UC2
+  UC2 -[hidden]right- UC3
+
+  UC4 -[hidden]right- UC5
+  UC5 -[hidden]right- UC6
+
+  UC3 -[hidden]down- UC5
+  UC7 -[hidden]right- UC8
+}
+
+actor "IoT Sensors /\nGateway" as IoT
+actor "Electronic\nSignage" as Signage
+
+IoT -[hidden]down- Signage
+
+IoT --> UC1
+Signage --> UC6
+
+User --> UC7
+Operator --> UC4
+Operator --> UC7
+
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC5 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC7 ..> UC8 : <<extend>>
+UC4 ..> UC2 : <<extend>>
+
+@enduml

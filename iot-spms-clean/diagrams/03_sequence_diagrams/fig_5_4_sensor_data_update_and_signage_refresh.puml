@@ -1,0 +1,36 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam sequenceMessageAlign center
+
+actor "IoT Sensor / Gateway" as IoT
+participant "IoT Ingestion Service" as Ingest
+participant "Occupancy Service" as Occupancy
+participant "Guidance Service" as Guidance
+participant "Electronic Signage" as Signage
+participant "Operator Dashboard" as Dashboard
+participant "Audit Log Service" as Log
+
+IoT -> Ingest: sendOccupancyData(sensorId, slotStatus, timestamp)
+Ingest -> Ingest: validateMessageFormat()
+Ingest -> Occupancy: updateSlotStatus(sensorId, slotStatus)
+
+alt data valid and consistent
+    Occupancy -> Occupancy: recalculateZoneAvailability()
+    Occupancy --> Guidance: availabilityUpdated(zoneStatus)
+
+    Guidance -> Guidance: determineGuidanceMessage()
+    Guidance -> Signage: updateDisplay(zoneStatus, guidance)
+    Signage --> Guidance: displayUpdated
+
+    Guidance -> Dashboard: refreshAvailabilityView()
+    Guidance -> Log: recordOccupancyUpdate()
+
+else delayed or inconsistent data
+    Ingest -> Log: recordInvalidSensorData(sensorId)
+    Ingest -> Dashboard: notifyDeviceWarning(sensorId)
+end
+
+@enduml

@@ -1,0 +1,39 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+
+start
+
+:Receive sensor or gateway message;
+:Validate message format and device identity;
+
+if (Message valid?) then (Yes)
+    :Check timestamp and consistency;
+    if (Data consistent?) then (Yes)
+        :Update slot status;
+        :Recalculate zone availability;
+        :Determine zone state;
+        :Update dashboard;
+        :Update electronic signage if needed;
+    else (No)
+        :Flag inconsistent data;
+        :Notify operator;
+        :Keep latest confirmed state;
+    endif
+else (No)
+    :Reject message;
+    :Record validation error;
+endif
+
+if (Gateway or sensor fault detected?) then (Yes)
+    :Generate device fault alert;
+    :Display alert on operator dashboard;
+else (No)
+    :Continue monitoring;
+endif
+
+stop
+
+@enduml

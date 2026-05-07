@@ -1,0 +1,58 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam sequenceMessageAlign center
+
+actor "Parking User" as User
+participant "Exit Interface" as UI
+participant "Access Control Service" as Access
+participant "Parking Session Service" as Session
+participant "Billing Service" as Billing
+participant "BKPay" as BKPay
+participant "Gate Controller" as Gate
+participant "Audit Log Service" as Log
+
+User -> UI: Request exit
+UI -> Access: submitExitRequest(userOrTicketId)
+
+Access -> Session: findActiveSession(userOrTicketId)
+Session --> Access: activeSession(sessionId)
+
+alt active session exists
+    Access -> Billing: calculateFee(sessionId)
+    Billing -> Billing: applyActivePricingPolicy()
+    Billing --> Access: feeResult(amount, paymentRequired)
+
+    alt payment not required
+        Access -> Session: closeSession(sessionId)
+        Access -> Log: recordExitEvent(sessionId)
+        Access -> Gate: openGate()
+        Access --> UI: exitApproved()
+        UI --> User: Display exit approved
+
+    else payment required
+        Billing -> BKPay: createPaymentRequest(amount, sessionId)
+        BKPay --> Billing: paymentRequest(status, paymentId)
+
+        alt payment paid or allowed by policy
+            Access -> Session: closeSession(sessionId)
+            Access -> Log: recordPaidExit(sessionId, paymentId)
+            Access -> Gate: openGate()
+            Access --> UI: exitApproved()
+            UI --> User: Display payment and exit status
+        else payment pending or failed
+            Access -> Log: recordPaymentIssue(sessionId, paymentId)
+            Access --> UI: exitPendingPayment()
+            UI --> User: Display payment required / failed
+        end
+    end
+
+else no active session
+    Access -> Log: recordInvalidExitAttempt(userOrTicketId)
+    Access --> UI: exitDenied("No active session")
+    UI --> User: Display exit denied
+end
+
+@enduml

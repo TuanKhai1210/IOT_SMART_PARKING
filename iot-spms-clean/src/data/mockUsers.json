@@ -1,0 +1,42 @@
+[
+  {
+    "id": "u001",
+    "cardId": "HCMUT-LEARNER-001",
+    "name": "Nguyen Minh Anh",
+    "role": "learner",
+    "memberType": "Learner",
+    "status": "active"
+  },
+  {
+    "id": "u002",
+    "cardId": "HCMUT-FACULTY-001",
+    "name": "Dr. Tran Quoc Bao",
+    "role": "faculty",
+    "memberType": "Faculty Member",
+    "status": "active"
+  },
+  {
+    "id": "u003",
+    "cardId": "HCMUT-STAFF-001",
+    "name": "Le Thi Hoa",
+    "role": "staff",
+    "memberType": "Staff",
+    "status": "active"
+  },
+  {
+    "id": "op001",
+    "cardId": "HCMUT-OPERATOR-001",
+    "name": "Parking Operator",
+    "role": "operator",
+    "memberType": "Operations Staff",
+    "status": "active"
+  },
+  {
+    "id": "ad001",
+    "cardId": "HCMUT-ADMIN-001",
+    "name": "System Administrator",
+    "role": "admin",
+    "memberType": "System Administrator",
+    "status": "active"
+  }
+]

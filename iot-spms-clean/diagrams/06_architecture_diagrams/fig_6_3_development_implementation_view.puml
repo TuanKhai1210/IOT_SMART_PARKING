@@ -1,0 +1,93 @@
+﻿@startuml
+top to bottom direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam ArrowThickness 1
+skinparam defaultTextAlignment center
+
+package "presentation" {
+  component "UserController" as UserController
+  component "OperatorController" as OperatorController
+  component "AdminController" as AdminController
+}
+
+package "application" {
+  component "AccessControlService" as AccessService
+  component "TemporaryAccessService" as TempService
+  component "OccupancyMonitoringService" as OccupancyService
+  component "GuidanceService" as GuidanceService
+  component "BillingService" as BillingService
+  component "PolicyService" as PolicyService
+  component "ReportingService" as ReportingService
+  component "AuditLogService" as AuditService
+}
+
+package "domain" {
+  component "User" as User
+  component "ParkingSession" as Session
+  component "TemporaryTicket" as Ticket
+  component "ParkingZone" as Zone
+  component "ParkingSlot" as Slot
+  component "PricingPolicy" as Pricing
+  component "PaymentRequest" as Payment
+  component "AuditLog" as Log
+}
+
+package "infrastructure" {
+  component "SSOAdapter" as SSO
+  component "DataCoreAdapter" as DataCore
+  component "BKPayAdapter" as BKPay
+  component "IoTGatewayAdapter" as IoT
+  component "SignageAdapter" as Signage
+  component "GateControllerAdapter" as Gate
+}
+
+package "repository" {
+  component "UserRepository" as UserRepo
+  component "SessionRepository" as SessionRepo
+  component "TicketRepository" as TicketRepo
+  component "ZoneRepository" as ZoneRepo
+  component "PolicyRepository" as PolicyRepo
+  component "PaymentRepository" as PaymentRepo
+  component "AuditLogRepository" as AuditRepo
+}
+
+UserController --> AccessService
+UserController --> GuidanceService
+UserController --> BillingService
+
+OperatorController --> TempService
+OperatorController --> OccupancyService
+OperatorController --> AuditService
+
+AdminController --> PolicyService
+AdminController --> ReportingService
+
+AccessService --> SSO
+AccessService --> DataCore
+AccessService --> Gate
+AccessService --> SessionRepo
+AccessService --> AuditService
+
+TempService --> TicketRepo
+TempService --> SessionRepo
+TempService --> AuditService
+
+OccupancyService --> IoT
+OccupancyService --> ZoneRepo
+OccupancyService --> AuditService
+
+GuidanceService --> ZoneRepo
+GuidanceService --> Signage
+
+BillingService --> PolicyRepo
+BillingService --> PaymentRepo
+BillingService --> BKPay
+
+PolicyService --> PolicyRepo
+ReportingService --> AuditRepo
+
+@enduml

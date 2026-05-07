@@ -1,0 +1,39 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam sequenceMessageAlign center
+
+actor "System Administrator" as Admin
+participant "Admin Interface" as UI
+participant "Authorization Service" as Auth
+participant "Policy Service" as Policy
+participant "Billing Service" as Billing
+participant "Audit Log Service" as Log
+
+Admin -> UI: Open pricing policy configuration
+UI -> Auth: verifyAdminPermission(adminId)
+
+alt authorized
+    Auth --> UI: permissionGranted
+    Admin -> UI: Submit policy changes
+    UI -> Policy: validatePolicy(policyData)
+
+    alt policy valid
+        Policy -> Policy: savePolicyVersion(policyData)
+        Policy -> Billing: notifyActivePolicyUpdated()
+        Policy -> Log: recordPolicyChange(adminId, policyData)
+        Policy --> UI: policySaved()
+        UI --> Admin: Display success message
+    else policy invalid
+        Policy --> UI: policyRejected(reason)
+        UI --> Admin: Display validation error
+    end
+
+else unauthorized
+    Auth --> UI: permissionDenied
+    UI --> Admin: Display access denied
+end
+
+@enduml

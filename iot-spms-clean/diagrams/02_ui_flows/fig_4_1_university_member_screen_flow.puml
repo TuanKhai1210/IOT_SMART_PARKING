@@ -1,0 +1,24 @@
+﻿@startuml
+top to bottom direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  FontSize 12
+}
+
+title University Member Screen Flow
+
+start
+:Login / Authentication;
+:Parking User Dashboard;
+:Parking Availability Map;
+:Parking Entry Result;
+:Parking Exit and Payment;
+:Payment Status / Parking History;
+stop
+
+@enduml

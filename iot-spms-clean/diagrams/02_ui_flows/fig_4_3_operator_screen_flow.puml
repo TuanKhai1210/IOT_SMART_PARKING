@@ -1,0 +1,24 @@
+﻿@startuml
+top to bottom direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  FontSize 12
+}
+
+title Parking Operator Screen Flow
+
+start
+:Operator Login;
+:Operator Monitoring Dashboard;
+:Parking Availability Map;
+:Device Alert / Exception List;
+:Exception Handling Screen;
+:Audit Log Updated;
+stop
+
+@enduml

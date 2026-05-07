@@ -1,0 +1,85 @@
+﻿@startuml
+top to bottom direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam ArrowThickness 1
+skinparam defaultTextAlignment center
+
+rectangle "Presentation Layer" {
+  component "Parking User UI" as UserUI
+  component "Operator Dashboard" as OperatorUI
+  component "Admin Dashboard" as AdminUI
+}
+
+rectangle "Application / Service Layer" {
+  component "Access Control Service" as Access
+  component "Temporary Access Service" as Temp
+  component "Occupancy Monitoring Service" as Occupancy
+  component "Guidance Service" as Guidance
+  component "Billing Service" as Billing
+  component "Policy Service" as Policy
+  component "Reporting Service" as Report
+  component "Audit Log Service" as Audit
+}
+
+rectangle "Domain Layer" {
+  component "User and Role Model" as UserModel
+  component "Parking Session Model" as SessionModel
+  component "Parking Zone / Slot Model" as ZoneModel
+  component "Ticket Model" as TicketModel
+  component "Payment Model" as PaymentModel
+  component "Policy Model" as PolicyModel
+}
+
+rectangle "Infrastructure / Integration Layer" {
+  component "SSO Adapter" as SSO
+  component "DATACORE Adapter" as DataCore
+  component "BKPay Adapter" as BKPay
+  component "IoT Gateway Adapter" as IoT
+  component "Signage Adapter" as Signage
+  component "Gate Controller Adapter" as Gate
+}
+
+database "Persistence Layer\n(System Database)" as DB
+
+UserUI --> Access
+UserUI --> Guidance
+UserUI --> Billing
+
+OperatorUI --> Occupancy
+OperatorUI --> Temp
+OperatorUI --> Audit
+
+AdminUI --> Policy
+AdminUI --> Report
+
+Access --> UserModel
+Access --> SessionModel
+Temp --> TicketModel
+Temp --> SessionModel
+Occupancy --> ZoneModel
+Guidance --> ZoneModel
+Billing --> PaymentModel
+Billing --> PolicyModel
+Policy --> PolicyModel
+Report --> Audit
+
+Access --> SSO
+Access --> DataCore
+Billing --> BKPay
+Occupancy --> IoT
+Guidance --> Signage
+Access --> Gate
+
+UserModel --> DB
+SessionModel --> DB
+ZoneModel --> DB
+TicketModel --> DB
+PaymentModel --> DB
+PolicyModel --> DB
+Audit --> DB
+
+@enduml

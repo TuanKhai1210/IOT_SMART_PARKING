@@ -1,0 +1,79 @@
+﻿@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam nodesep 35
+skinparam ranksep 35
+skinparam defaultTextAlignment center
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontSize 12
+}
+
+actor "Parking User" as User
+actor "Ops Staff" as Staff
+
+User -[hidden]down- Staff
+
+rectangle "\nSmart Parking Management System\n(IoT-SPMS)" as SPMS {
+
+  usecase "Manage Parking\nAccess" as UC1
+  usecase "Monitor Parking\nOccupancy" as UC2
+  usecase "Process Billing\nand Payment" as UC5
+
+  usecase "Manage Temporary\nAccess" as UC3
+  usecase "Provide Parking\nGuidance" as UC4
+  usecase "Manage Policies,\nLogs and Reports" as UC6
+
+  UC1 -[hidden]right- UC2
+  UC2 -[hidden]right- UC5
+
+  UC3 -[hidden]right- UC4
+  UC4 -[hidden]right- UC6
+
+  UC1 -[hidden]down- UC3
+  UC2 -[hidden]down- UC4
+  UC5 -[hidden]down- UC6
+}
+
+actor "Campus Services" as Campus
+actor "IoT Devices" as Device
+
+Campus -[hidden]down- Device
+
+User -[hidden]right-> UC1
+Staff -[hidden]right-> UC3
+UC5 -[hidden]right-> Campus
+UC6 -[hidden]right-> Device
+
+User --> UC1
+User --> UC3
+User --> UC5
+
+Staff --> UC2
+Staff --> UC6
+
+Campus --> UC1
+Campus --> UC5
+
+Device --> UC2
+Device --> UC4
+
+@enduml

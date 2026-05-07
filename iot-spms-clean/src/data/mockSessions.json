@@ -1,0 +1,13 @@
+[
+  {
+    "id": "S-1001",
+    "userId": "u002",
+    "userName": "Dr. Tran Quoc Bao",
+    "type": "member",
+    "zoneId": "B",
+    "entryTime": "2026-04-27T08:20:00",
+    "exitTime": null,
+    "status": "Active",
+    "paymentId": null
+  }
+]

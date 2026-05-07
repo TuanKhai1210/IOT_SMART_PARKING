@@ -1,0 +1,30 @@
+[
+  {
+    "id": "A",
+    "name": "Zone A - Main Gate",
+    "capacity": 20,
+    "occupied": 8,
+    "gatewayStatus": "online"
+  },
+  {
+    "id": "B",
+    "name": "Zone B - Library Area",
+    "capacity": 16,
+    "occupied": 12,
+    "gatewayStatus": "online"
+  },
+  {
+    "id": "C",
+    "name": "Zone C - Canteen Area",
+    "capacity": 14,
+    "occupied": 14,
+    "gatewayStatus": "online"
+  },
+  {
+    "id": "D",
+    "name": "Zone D - Administration Building",
+    "capacity": 10,
+    "occupied": 2,
+    "gatewayStatus": "online"
+  }
+]

@@ -1,0 +1,64 @@
+﻿@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam ArrowThickness 1
+skinparam defaultTextAlignment center
+
+node "User Device" as UserDevice {
+  artifact "Parking User Web UI" as UserWeb
+}
+
+node "Operator / Admin Workstation" as StaffDevice {
+  artifact "Operator Dashboard" as OperatorDash
+  artifact "Admin Dashboard" as AdminDash
+}
+
+node "IoT-SPMS Application Server" as AppServer {
+  artifact "Access Control Service" as Access
+  artifact "Temporary Access Service" as Temp
+  artifact "Occupancy Monitoring Service" as Occupancy
+  artifact "Guidance Service" as Guidance
+  artifact "Billing Service" as Billing
+  artifact "Policy Service" as Policy
+  artifact "Reporting Service" as Reporting
+  artifact "Audit Log Service" as Audit
+}
+
+database "IoT-SPMS Database" as DB
+
+cloud "Campus Services" as Campus {
+  artifact "HCMUT_SSO" as SSO
+  artifact "HCMUT_DATACORE" as DataCore
+}
+
+cloud "Payment Platform" as Payment {
+  artifact "BKPay" as BKPay
+}
+
+node "IoT Field Layer" as Field {
+  node "IoT Gateway" as Gateway
+  node "Parking Sensors" as Sensors
+  node "Electronic Signage" as Signage
+  node "Gate Controller" as Gate
+}
+
+UserWeb --> AppServer : HTTPS
+OperatorDash --> AppServer : HTTPS
+AdminDash --> AppServer : HTTPS
+
+AppServer --> DB : SQL / ORM
+
+Access --> SSO : Secure API
+Access --> DataCore : Read-only API
+Billing --> BKPay : Payment API
+
+Sensors --> Gateway : Sensor protocol
+Gateway --> Occupancy : MQTT / HTTP
+Guidance --> Signage : Display update
+Access --> Gate : Gate command
+
+@enduml

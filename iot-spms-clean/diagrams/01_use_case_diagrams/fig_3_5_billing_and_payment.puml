@@ -1,0 +1,63 @@
+﻿@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam nodesep 35
+skinparam ranksep 35
+skinparam defaultTextAlignment center
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+actor "Parking User" as User
+actor "System\nAdministrator" as Admin
+
+User -[hidden]down- Admin
+
+rectangle "\nBilling and Payment" {
+
+  usecase "Retrieve Parking\nSession Data" as UC1
+  usecase "Apply Pricing\nPolicy" as UC2
+  usecase "Calculate Parking\nFee" as UC3
+  usecase "Generate Payment\nRequest" as UC4
+  usecase "Track Payment\nStatus" as UC5
+  usecase "View Payment\nStatus" as UC6
+  usecase "Resolve Payment\nException" as UC7
+
+  UC1 -[hidden]right- UC2
+  UC2 -[hidden]right- UC3
+
+  UC4 -[hidden]right- UC5
+  UC5 -[hidden]right- UC6
+
+  UC3 -[hidden]down- UC4
+  UC7 -[hidden]down- UC5
+}
+
+actor "BKPay" as BKPay
+
+User --> UC6
+Admin --> UC2
+BKPay --> UC4
+BKPay --> UC5
+
+UC3 ..> UC1 : <<include>>
+UC3 ..> UC2 : <<include>>
+UC4 ..> UC3 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC6 ..> UC5 : <<include>>
+UC7 ..> UC5 : <<extend>>
+
+@enduml

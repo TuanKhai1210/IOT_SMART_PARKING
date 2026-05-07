@@ -1,0 +1,19 @@
+{
+  "name": "iot-spms-hcmut",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {},
+  "description": "Vite-based MVP prototype for an IoT-based Smart Parking Management System for a university campus."
+}

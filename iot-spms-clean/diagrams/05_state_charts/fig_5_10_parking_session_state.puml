@@ -1,0 +1,21 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+
+[*] --> Created
+
+Created --> Active : entry approved
+Active --> PaymentPending : exit requested and payment required
+PaymentPending --> Paid : payment confirmed
+PaymentPending --> PaymentFailed : payment failed
+PaymentFailed --> PaymentPending : retry payment
+Paid --> Closed : exit approved
+Active --> Closed : exit approved without payment
+Active --> Exception : invalid session / operator issue
+PaymentPending --> Exception : unresolved payment issue
+Exception --> Closed : operator resolves
+Closed --> [*]
+
+@enduml

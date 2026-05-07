@@ -1,0 +1,42 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam sequenceMessageAlign center
+
+actor "Visitor" as Visitor
+actor "Parking Operator" as Operator
+participant "Temporary Access Interface" as UI
+participant "Temporary Access Service" as Temp
+participant "Parking Session Service" as Session
+participant "Gate Controller" as Gate
+participant "Audit Log Service" as Log
+
+Visitor -> UI: Request temporary access
+UI -> Temp: submitTemporaryAccessInfo(visitorInfo, vehicleInfo)
+
+Temp -> Temp: validateTemporaryInfo()
+
+alt information valid
+    Temp -> Session: createTemporarySession(visitorInfo, vehicleInfo)
+    Session --> Temp: temporarySessionCreated(ticketId)
+
+    Temp -> Log: recordTemporaryTicketIssued(ticketId)
+    Temp -> Gate: openGate()
+    Gate --> Temp: gateOpened
+
+    Temp --> UI: ticketIssued(ticketId)
+    UI --> Visitor: Display / print temporary ticket
+
+else information incomplete or invalid
+    Temp --> UI: rejectTemporaryRequest(reason)
+    UI --> Visitor: Display required correction
+
+    opt operator assistance
+        Operator -> UI: Enter corrected information
+        UI -> Temp: resubmitTemporaryAccessInfo()
+    end
+end
+
+@enduml

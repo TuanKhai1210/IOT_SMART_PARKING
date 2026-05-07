@@ -1,0 +1,17 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+
+[*] --> Created
+
+Created --> Pending : request sent to BKPay
+Pending --> Paid : payment confirmed
+Pending --> Failed : payment failed
+Pending --> Expired : payment timeout
+Failed --> Pending : retry payment
+Expired --> Created : regenerate request
+Paid --> [*]
+
+@enduml

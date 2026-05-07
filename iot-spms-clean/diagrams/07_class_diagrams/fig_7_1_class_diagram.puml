@@ -1,0 +1,254 @@
+﻿@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam ArrowThickness 1
+skinparam defaultTextAlignment center
+
+class UserController {
+  +requestEntry(userId: String): AccessResult
+  +requestExit(userId: String): AccessResult
+  +viewAvailability(): AvailabilityView
+  +viewPaymentStatus(userId: String): PaymentStatus
+}
+
+class OperatorController {
+  +issueTemporaryTicket(info: VisitorInfo): TemporaryTicket
+  +resolveException(exceptionId: String): ExceptionResult
+  +viewDeviceAlerts(): List<DeviceAlert>
+  +viewOperationalLogs(): List<AuditLog>
+}
+
+class AdminController {
+  +configurePricingPolicy(policy: PricingPolicy): PolicyResult
+  +configurePrivileges(rule: PrivilegeRule): PolicyResult
+  +manageRolePermission(role: Role): RoleResult
+  +generateReport(criteria: ReportCriteria): Report
+}
+
+class AccessControlService {
+  +authenticateMember(cardId: String): AuthResult
+  +authorizeAccess(user: User): Boolean
+  +processEntry(userId: String, gateId: String): AccessResult
+  +processExit(userId: String, gateId: String): AccessResult
+}
+
+class TemporaryAccessService {
+  +issueTicket(info: VisitorInfo): TemporaryTicket
+  +createTemporarySession(ticket: TemporaryTicket): ParkingSession
+  +validateTemporaryExit(ticketId: String): Boolean
+  +handleLostTicket(ticketId: String): ExceptionResult
+}
+
+class OccupancyMonitoringService {
+  +processSensorData(data: SensorData): void
+  +validateSensorData(data: SensorData): Boolean
+  +updateSlotStatus(slotId: String, status: SlotStatus): void
+  +detectDeviceFault(deviceId: String): DeviceAlert
+}
+
+class GuidanceService {
+  +computeZoneStatus(zoneId: String): ZoneStatus
+  +generateGuidance(zoneId: String): GuidanceMessage
+  +updateSignage(message: GuidanceMessage): void
+}
+
+class BillingService {
+  +calculateFee(sessionId: String): Money
+  +applyPricingPolicy(session: ParkingSession): Money
+  +createPaymentRequest(sessionId: String): PaymentRequest
+  +updatePaymentStatus(paymentId: String): PaymentStatus
+}
+
+class PolicyService {
+  +createPricingPolicy(policy: PricingPolicy): PolicyResult
+  +updatePricingPolicy(policyId: String, policy: PricingPolicy): PolicyResult
+  +configurePrivilege(rule: PrivilegeRule): PolicyResult
+  +validatePolicy(policy: PricingPolicy): Boolean
+}
+
+class ReportingService {
+  +generateOperationalReport(criteria: ReportCriteria): Report
+  +generateFinancialReport(criteria: ReportCriteria): Report
+}
+
+class AuditLogService {
+  +recordEvent(log: AuditLog): void
+  +searchLogs(criteria: LogSearchCriteria): List<AuditLog>
+}
+
+class User {
+  -userId: String
+  -fullName: String
+  -role: UserRole
+  -status: UserStatus
+  +isActive(): Boolean
+}
+
+class UniversityMember {
+  -cardId: String
+  -memberType: MemberType
+}
+
+class Visitor {
+  -visitorId: String
+  -contactInfo: String
+}
+
+class ParkingSession {
+  -sessionId: String
+  -entryTime: DateTime
+  -exitTime: DateTime
+  -status: SessionStatus
+  -gateIn: String
+  -gateOut: String
+  +open(): void
+  +close(exitTime: DateTime): void
+  +isActive(): Boolean
+}
+
+class TemporaryTicket {
+  -ticketId: String
+  -issuedTime: DateTime
+  -status: TicketStatus
+  +activate(): void
+  +close(): void
+  +markLost(): void
+}
+
+class ParkingZone {
+  -zoneId: String
+  -name: String
+  -capacity: int
+  -status: ZoneStatus
+  +calculateAvailability(): int
+  +updateStatus(): void
+}
+
+class ParkingSlot {
+  -slotId: String
+  -status: SlotStatus
+  -lastUpdated: DateTime
+  +markOccupied(): void
+  +markAvailable(): void
+  +markFaulty(): void
+}
+
+class SensorDevice {
+  -deviceId: String
+  -slotId: String
+  -status: DeviceStatus
+  -lastSignalTime: DateTime
+  +isOnline(): Boolean
+}
+
+class PricingPolicy {
+  -policyId: String
+  -userRole: UserRole
+  -baseFee: Money
+  -effectiveFrom: DateTime
+  -effectiveTo: DateTime
+  +calculate(session: ParkingSession): Money
+  +isActive(): Boolean
+}
+
+class PaymentRequest {
+  -paymentId: String
+  -sessionId: String
+  -amount: Money
+  -status: PaymentStatus
+  -createdAt: DateTime
+  +markPaid(): void
+  +markFailed(): void
+  +expire(): void
+}
+
+class AuditLog {
+  -logId: String
+  -actorId: String
+  -action: String
+  -targetObject: String
+  -timestamp: DateTime
+  -result: String
+}
+
+class SSOAdapter {
+  +authenticate(cardId: String): AuthResult
+}
+
+class DataCoreAdapter {
+  +getUserProfile(userId: String): UserProfile
+  +getRoleData(userId: String): RoleData
+}
+
+class BKPayAdapter {
+  +createPayment(request: PaymentRequest): PaymentResponse
+  +queryPaymentStatus(paymentId: String): PaymentStatus
+}
+
+class IoTGatewayAdapter {
+  +receiveSensorData(): SensorData
+}
+
+class SignageAdapter {
+  +sendGuidance(message: GuidanceMessage): void
+}
+
+class GateControllerAdapter {
+  +openGate(gateId: String): GateResult
+  +closeGate(gateId: String): GateResult
+}
+
+User <|-- UniversityMember
+User <|-- Visitor
+
+UserController --> AccessControlService
+UserController --> GuidanceService
+UserController --> BillingService
+
+OperatorController --> TemporaryAccessService
+OperatorController --> OccupancyMonitoringService
+OperatorController --> AuditLogService
+
+AdminController --> PolicyService
+AdminController --> ReportingService
+AdminController --> AuditLogService
+
+AccessControlService --> SSOAdapter
+AccessControlService --> DataCoreAdapter
+AccessControlService --> GateControllerAdapter
+AccessControlService --> ParkingSession
+AccessControlService --> AuditLogService
+
+TemporaryAccessService --> TemporaryTicket
+TemporaryAccessService --> ParkingSession
+TemporaryAccessService --> AuditLogService
+
+OccupancyMonitoringService --> IoTGatewayAdapter
+OccupancyMonitoringService --> ParkingSlot
+OccupancyMonitoringService --> SensorDevice
+OccupancyMonitoringService --> AuditLogService
+
+GuidanceService --> ParkingZone
+GuidanceService --> SignageAdapter
+
+BillingService --> PricingPolicy
+BillingService --> PaymentRequest
+BillingService --> BKPayAdapter
+
+PolicyService --> PricingPolicy
+PolicyService --> DataCoreAdapter
+
+ReportingService --> AuditLog
+AuditLogService --> AuditLog
+
+ParkingZone "1" o-- "*" ParkingSlot
+ParkingSlot "1" -- "0..1" SensorDevice
+User "1" -- "*" ParkingSession
+ParkingSession "0..1" -- "1" TemporaryTicket
+ParkingSession "1" -- "0..1" PaymentRequest
+PricingPolicy "1" -- "*" PaymentRequest
+
+@enduml

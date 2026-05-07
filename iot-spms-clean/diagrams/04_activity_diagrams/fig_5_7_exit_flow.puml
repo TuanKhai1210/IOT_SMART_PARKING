@@ -1,0 +1,38 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+
+start
+
+:User arrives at exit gate;
+:User submits ID card or temporary ticket;
+:Find active parking session;
+
+if (Active session found?) then (Yes)
+    :Calculate parking fee;
+    if (Payment required?) then (Yes)
+        :Generate payment request through BKPay;
+        if (Payment completed or allowed by policy?) then (Yes)
+            :Close parking session;
+            :Record exit event;
+            :Open gate;
+        else (No)
+            :Display payment pending or failed;
+            :Record payment issue;
+        endif
+    else (No)
+        :Close parking session;
+        :Record exit event;
+        :Open gate;
+    endif
+else (No)
+    :Reject exit;
+    :Notify parking operator;
+    :Record invalid exit attempt;
+endif
+
+stop
+
+@enduml

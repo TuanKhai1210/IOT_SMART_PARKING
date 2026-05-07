@@ -1,0 +1,11 @@
+[
+  {
+    "id": "L-0001",
+    "time": "2026-04-27T08:20:00",
+    "actor": "System",
+    "type": "Entry",
+    "target": "S-1001",
+    "message": "Initial active session loaded for demonstration.",
+    "result": "Success"
+  }
+]

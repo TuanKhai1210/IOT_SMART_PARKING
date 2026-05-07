@@ -1,0 +1,23 @@
+﻿@startuml
+top to bottom direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  FontSize 12
+}
+
+title System Administrator Screen Flow
+
+start
+:Admin Login;
+:Admin Dashboard;
+:Pricing Policy / Role Management / Report Generation;
+:Validation and Confirmation;
+:Audit Log Updated;
+stop
+
+@enduml

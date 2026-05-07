@@ -1,0 +1,51 @@
+﻿@startuml
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowThickness 1
+skinparam sequenceMessageAlign center
+
+actor "University Member" as User
+participant "Entry Interface" as UI
+participant "Access Control Service" as Access
+participant "HCMUT_SSO" as SSO
+participant "HCMUT_DATACORE" as DataCore
+participant "Parking Session Service" as Session
+participant "Gate Controller" as Gate
+participant "Audit Log Service" as Log
+
+User -> UI: Scan ID card
+UI -> Access: submitEntryRequest(cardId)
+
+Access -> SSO: authenticate(cardId)
+SSO --> Access: authenticationResult
+
+alt authentication successful
+    Access -> DataCore: getRoleData(userId)
+    DataCore --> Access: roleData
+
+    Access -> Access: checkParkingPrivilege(roleData)
+
+    alt access permitted
+        Access -> Session: createSession(userId, gateId)
+        Session --> Access: sessionCreated(sessionId)
+
+        Access -> Log: recordEntryEvent(sessionId, userId)
+        Access -> Gate: openGate()
+        Gate --> Access: gateOpened
+
+        Access --> UI: entryApproved(sessionId)
+        UI --> User: Display entry approval
+    else access not permitted
+        Access -> Log: recordDeniedEntry(userId, reason)
+        Access --> UI: entryDenied(reason)
+        UI --> User: Display access denied
+    end
+
+else authentication failed
+    Access -> Log: recordAuthenticationFailure(cardId)
+    Access --> UI: authenticationFailed()
+    UI --> User: Display authentication error
+end
+
+@enduml
