@@ -85,8 +85,47 @@ const INITIAL_ZONES = [
     occupied: 78,
     allowedRoles: ["student", "faculty", "staff", "visitor"],
     deviceStatus: "Online",
+    mapPoint: { x: 10, y: 72 },
     description:
       "General parking area for students, faculty members, staff members, and visitors.",
+    parkingZones: [
+      {
+        id: "G1-ZA",
+        name: "Zone G1-A",
+        label: "Zone A",
+        gateId: "GATE-1",
+        capacity: 45,
+        occupied: 26,
+        sensorStatus: "Active",
+        sensorNodes: makeDemoSensors("G1-ZA", 8, 5),
+        mapPoint: { x: 30, y: 56 },
+        guidanceNote: "Closest available zone from Gate 1.",
+      },
+      {
+        id: "G1-ZB",
+        name: "Zone G1-B",
+        label: "Zone B",
+        gateId: "GATE-1",
+        capacity: 40,
+        occupied: 28,
+        sensorStatus: "Active",
+        sensorNodes: makeDemoSensors("G1-ZB", 8, 4, [7], []),
+        mapPoint: { x: 42, y: 68 },
+        guidanceNote: "Secondary parking zone near the main entrance area.",
+      },
+      {
+        id: "G1-ZC",
+        name: "Zone G1-C",
+        label: "Zone C",
+        gateId: "GATE-1",
+        capacity: 35,
+        occupied: 24,
+        sensorStatus: "Active",
+        sensorNodes: makeDemoSensors("G1-ZC", 8, 3, [], [8]),
+        mapPoint: { x: 50, y: 50 },
+        guidanceNote: "Overflow zone for Gate 1 entry.",
+      },
+    ],
   },
   {
     id: "GATE-2",
@@ -98,8 +137,35 @@ const INITIAL_ZONES = [
     occupied: 31,
     allowedRoles: ["faculty", "staff"],
     deviceStatus: "Online",
+    mapPoint: { x: 54, y: 20 },
     description:
       "Restricted parking area for faculty members and university staff only.",
+    parkingZones: [
+      {
+        id: "G2-ZA",
+        name: "Zone G2-A",
+        label: "Faculty Zone A",
+        gateId: "GATE-2",
+        capacity: 35,
+        occupied: 16,
+        sensorStatus: "Active",
+        sensorNodes: makeDemoSensors("G2-ZA", 8, 4),
+        mapPoint: { x: 66, y: 34 },
+        guidanceNote: "Preferred faculty and staff parking zone.",
+      },
+      {
+        id: "G2-ZB",
+        name: "Zone G2-B",
+        label: "Faculty Zone B",
+        gateId: "GATE-2",
+        capacity: 35,
+        occupied: 15,
+        sensorStatus: "Active",
+        sensorNodes: makeDemoSensors("G2-ZB", 8, 3, [6], []),
+        mapPoint: { x: 76, y: 46 },
+        guidanceNote: "Secondary faculty and staff parking zone.",
+      },
+    ],
   },
   {
     id: "GATE-3",
@@ -111,11 +177,37 @@ const INITIAL_ZONES = [
     occupied: 91,
     allowedRoles: ["student", "faculty", "staff", "visitor"],
     deviceStatus: "Online",
+    mapPoint: { x: 88, y: 76 },
     description:
       "General parking area for students, faculty members, staff members, and visitors.",
+    parkingZones: [
+      {
+        id: "G3-ZA",
+        name: "Zone G3-A",
+        label: "Zone D",
+        gateId: "GATE-3",
+        capacity: 45,
+        occupied: 42,
+        sensorStatus: "Active",
+        sensorNodes: makeDemoSensors("G3-ZA", 8, 6),
+        mapPoint: { x: 72, y: 64 },
+        guidanceNote: "Closest parking zone from Gate 3.",
+      },
+      {
+        id: "G3-ZB",
+        name: "Zone G3-B",
+        label: "Zone E",
+        gateId: "GATE-3",
+        capacity: 55,
+        occupied: 49,
+        sensorStatus: "Active",
+        sensorNodes: makeDemoSensors("G3-ZB", 8, 5, [8], []),
+        mapPoint: { x: 62, y: 82 },
+        guidanceNote: "Overflow zone near the secondary entrance.",
+      },
+    ],
   },
 ];
-
 const INITIAL_POLICIES = [
   { role: "student", label: "Student", fee: 3000, note: "Accumulated by parking session" },
   { role: "visitor", label: "Visitor", fee: 5000, note: "Paid per temporary parking session" },
@@ -131,6 +223,60 @@ const OPERATING_HOURS = {
   startHour: 5,
   endHour: 21,
 };
+
+
+function makeDemoSensors(zoneId, total = 8, occupied = 0, maintenanceNumbers = [], faultNumbers = []) {
+  return Array.from({ length: total }, (_, index) => {
+    const sensorNumber = index + 1;
+    const numberText = String(sensorNumber).padStart(2, "0");
+    const operationalStatus = faultNumbers.includes(sensorNumber)
+      ? "Fault"
+      : maintenanceNumbers.includes(sensorNumber)
+        ? "Maintenance"
+        : "Active";
+
+    return {
+      id: `${zoneId}-S${numberText}`,
+      name: `Sensor ${numberText}`,
+      operationalStatus,
+      slotStatus: index < occupied ? "Occupied" : "Empty",
+      lastEvent: "Initial mock reading",
+    };
+  });
+}
+
+function getParkingZoneSensors(parkingZone) {
+  return Array.isArray(parkingZone?.sensorNodes) ? parkingZone.sensorNodes : [];
+}
+
+function getSensorCounts(parkingZone) {
+  const sensors = getParkingZoneSensors(parkingZone);
+  return {
+    total: sensors.length,
+    active: sensors.filter((sensor) => sensor.operationalStatus === "Active").length,
+    occupied: sensors.filter((sensor) => sensor.operationalStatus === "Active" && sensor.slotStatus === "Occupied").length,
+    empty: sensors.filter((sensor) => sensor.operationalStatus === "Active" && sensor.slotStatus === "Empty").length,
+    maintenance: sensors.filter((sensor) => sensor.operationalStatus === "Maintenance").length,
+    fault: sensors.filter((sensor) => sensor.operationalStatus === "Fault").length,
+  };
+}
+
+function deriveZoneSensorStatus(sensorNodes = []) {
+  if (sensorNodes.some((sensor) => sensor.operationalStatus === "Fault")) return "Fault";
+  if (sensorNodes.some((sensor) => sensor.operationalStatus === "Maintenance")) return "Maintenance";
+  return "Active";
+}
+
+function sensorOperationalClass(status) {
+  if (status === "Fault") return "status danger";
+  if (status === "Maintenance") return "status warning";
+  return "status available";
+}
+
+function sensorSlotClass(status) {
+  if (status === "Occupied") return "status info";
+  return "status available";
+}
 
 const ROLE_GROUPS = {
   UNIVERSITY_MEMBER: ["student", "faculty", "staff"],
@@ -331,6 +477,131 @@ function getSystemMonthlyStats(sessions = [], payments = []) {
 
 function roleCanUseGate(role, zone) {
   return zone.allowedRoles.includes(role);
+}
+
+function getParkingZones(gate) {
+  return Array.isArray(gate?.parkingZones) ? gate.parkingZones : [];
+}
+
+function getParkingZoneStatus(parkingZone) {
+  if (parkingZone.sensorStatus === "Fault") return "Fault";
+  if (parkingZone.sensorStatus === "Maintenance") return "Maintenance";
+
+  const ratio = parkingZone.capacity > 0 ? parkingZone.occupied / parkingZone.capacity : 1;
+  if (ratio >= 1) return "Full";
+  if (ratio >= 0.85) return "Nearly Full";
+  return "Active";
+}
+
+function getParkingZoneAvailable(parkingZone) {
+  return Math.max(0, (parkingZone.capacity || 0) - (parkingZone.occupied || 0));
+}
+
+function summarizeGateDeviceStatus(parkingZones = []) {
+  if (parkingZones.some((z) => z.sensorStatus === "Fault")) return "Fault";
+  if (parkingZones.some((z) => z.sensorStatus === "Maintenance")) return "Maintenance";
+  return "Online";
+}
+
+function recalculateGateFromParkingZones(gate) {
+  const parkingZones = getParkingZones(gate);
+
+  if (parkingZones.length === 0) return gate;
+
+  const occupied = parkingZones.reduce((sum, z) => sum + Number(z.occupied || 0), 0);
+  const capacity = parkingZones.reduce((sum, z) => sum + Number(z.capacity || 0), 0);
+
+  return {
+    ...gate,
+    capacity,
+    occupied,
+    deviceStatus: summarizeGateDeviceStatus(parkingZones),
+  };
+}
+
+function updateParkingZoneInGate(gate, parkingZoneId, updater) {
+  const parkingZones = getParkingZones(gate).map((parkingZone) =>
+    parkingZone.id === parkingZoneId ? updater(parkingZone) : parkingZone
+  );
+
+  return recalculateGateFromParkingZones({ ...gate, parkingZones });
+}
+
+function getBestEntryParkingZone(gate) {
+  const candidates = getParkingZones(gate).filter(
+    (parkingZone) =>
+      parkingZone.sensorStatus === "Active" &&
+      getParkingZoneAvailable(parkingZone) > 0
+  );
+
+  return candidates.sort(
+    (a, b) => getParkingZoneAvailable(b) - getParkingZoneAvailable(a)
+  )[0];
+}
+
+function getParkingZoneById(zones, gateId, parkingZoneId) {
+  const gate = zones.find((zone) => zone.id === gateId);
+  const parkingZone = getParkingZones(gate).find((zone) => zone.id === parkingZoneId);
+
+  return { gate, parkingZone };
+}
+
+function getBestExitGate(activeSession, zones, user) {
+  if (!activeSession) return null;
+
+  const currentGate = zones.find((zone) => zone.id === activeSession.zoneId);
+
+  if (currentGate && currentGate.deviceStatus === "Online") return currentGate;
+
+  const allowedGates = zones.filter(
+    (zone) => (roleCanUseGate(user.role, zone) || isOpsUser(user)) && zone.deviceStatus === "Online"
+  );
+
+  return allowedGates[0] || currentGate || null;
+}
+
+function createEntryGuidance(gate, parkingZone) {
+  if (!gate || !parkingZone) return null;
+
+  return {
+    type: "entry",
+    title: `Entry guidance: ${gate.gateName} to ${parkingZone.name}`,
+    summary: `After entry approval, follow the highlighted route from ${gate.gateName} to ${parkingZone.name}.`,
+    nodes: [
+      { id: gate.id, label: gate.gateName, ...gate.mapPoint },
+      { id: parkingZone.id, label: parkingZone.name, ...parkingZone.mapPoint },
+    ],
+    steps: [
+      `Start from ${gate.gateName}.`,
+      `Follow the blinking guidance line to ${parkingZone.name}.`,
+      `Park in ${parkingZone.label}. Available slots: ${getParkingZoneAvailable(parkingZone)}.`,
+    ],
+  };
+}
+
+function createExitGuidance(activeSession, exitGate) {
+  if (!activeSession || !exitGate) return null;
+
+  const startNode = activeSession.targetParkingZonePoint || { x: 50, y: 50 };
+
+  return {
+    type: "exit",
+    title: `Exit guidance: ${activeSession.targetParkingZoneName || activeSession.zoneName} to ${exitGate.gateName}`,
+    summary: `For exit, follow the highlighted route to ${exitGate.gateName}.`,
+    nodes: [
+      {
+        id: activeSession.targetParkingZoneId || activeSession.zoneId,
+        label: activeSession.targetParkingZoneName || activeSession.zoneName,
+        ...startNode,
+      },
+      { id: exitGate.id, label: exitGate.gateName, ...exitGate.mapPoint },
+    ],
+    steps: [
+      `Start from ${activeSession.targetParkingZoneName || activeSession.zoneName}.`,
+      `Follow the blinking exit line to ${exitGate.gateName}.`,
+      `Complete exit through ${exitGate.gateName}.`,
+    ],
+  };
 }
 
 function estimateFee(session, policies) {
@@ -692,6 +963,51 @@ function CampusMap({ zones }) {
   );
 }
 
+function GuidancePanel({ guidance }) {
+  if (!guidance) return null;
+
+  const routePoints = guidance.nodes.map((node) => `${node.x},${node.y}`).join(" ");
+
+  return (
+    <div className="guidance-panel">
+      <div className="guidance-head">
+        <div>
+          <p className="eyebrow">Smart guidance</p>
+          <h3>{guidance.title}</h3>
+        </div>
+        <span className={guidance.type === "entry" ? "status available" : "status warning"}>
+          {guidance.type === "entry" ? "Entry route" : "Exit route"}
+        </span>
+      </div>
+
+      <p className="guidance-summary">{guidance.summary}</p>
+
+      <div className="guidance-map">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Parking guidance route">
+          <polyline className="guidance-route-line" points={routePoints} />
+        </svg>
+
+        {guidance.nodes.map((node, index) => (
+          <div
+            key={node.id}
+            className={index === 0 ? "guidance-node start" : "guidance-node target"}
+            style={{ left: `${node.x}%`, top: `${node.y}%` }}
+          >
+            <span>{index === 0 ? "Start" : "Target"}</span>
+            <strong>{node.label}</strong>
+          </div>
+        ))}
+      </div>
+
+      <ol className="guidance-steps">
+        {guidance.steps.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 function MapPage({ zones }) {
   return (
     <section>
@@ -752,15 +1068,22 @@ function MapPage({ zones }) {
 function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments, setPayments, policies, addLog }) {
   const [selectedGate, setSelectedGate] = useState("GATE-1");
   const [message, setMessage] = useState("");
+  const [guidance, setGuidance] = useState(null);
   const activeSession = sessions.find((s) => s.userId === user.id && s.status === "Active");
 
   function handleEntry() {
     const zone = zones.find((z) => z.id === selectedGate);
 
+    if (!zone) {
+      setMessage("Entry denied: selected gate was not found.");
+      return;
+    }
+
     const hoursCheck = validateOperatingHours(user, "Entry request");
 
     if (!hoursCheck.allowed) {
       setMessage(hoursCheck.message);
+      setGuidance(null);
       addLog(user.id, "ENTRY_DENIED_OUT_OF_HOURS", zone.id, hoursCheck.message);
       return;
     }
@@ -776,6 +1099,7 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
     if (!canUseSelectedGate) {
       const msg = `${zone.gateName} is restricted to faculty and staff only.`;
       setMessage(msg);
+      setGuidance(null);
       addLog(user.id, "ENTRY_DENIED", zone.id, msg);
       return;
     }
@@ -783,6 +1107,7 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
     if (status === "Full") {
       const msg = `${zone.gateName} is full. Please select another gate.`;
       setMessage(msg);
+      setGuidance(null);
       addLog(user.id, "ENTRY_DENIED", zone.id, msg);
       return;
     }
@@ -790,7 +1115,18 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
     if (activeSession) {
       const msg = "Entry denied: user already has an active parking session.";
       setMessage(msg);
+      setGuidance(null);
       addLog(user.id, "ENTRY_DENIED", activeSession.id, msg);
+      return;
+    }
+
+    const targetParkingZone = getBestEntryParkingZone(zone);
+
+    if (!targetParkingZone) {
+      const msg = `${zone.gateName} has no active parking zone available. Please choose another gate.`;
+      setMessage(msg);
+      setGuidance(null);
+      addLog(user.id, "ENTRY_DENIED_NO_ACTIVE_ZONE", zone.id, msg);
       return;
     }
 
@@ -802,6 +1138,9 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
       zoneId: zone.id,
       zoneName: zone.name,
       gateName: zone.gateName,
+      targetParkingZoneId: targetParkingZone.id,
+      targetParkingZoneName: targetParkingZone.name,
+      targetParkingZonePoint: targetParkingZone.mapPoint,
       entryTime: new Date().toISOString(),
       exitTime: null,
       status: "Active",
@@ -809,9 +1148,22 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
     };
 
     setSessions((prev) => [session, ...prev]);
-    setZones((prev) => prev.map((z) => z.id === zone.id ? { ...z, occupied: Math.min(z.capacity, z.occupied + 1) } : z));
-    const msg = `Entry approved at ${zone.gateName}. Session ${session.id} created.`;
+
+    setZones((prev) =>
+      prev.map((z) =>
+        z.id === zone.id
+          ? updateParkingZoneInGate(z, targetParkingZone.id, (parkingZone) => ({
+              ...parkingZone,
+              occupied: Math.min(parkingZone.capacity, parkingZone.occupied + 1),
+            }))
+          : z
+      )
+    );
+
+    const routeGuidance = createEntryGuidance(zone, targetParkingZone);
+    const msg = `Entry approved at ${zone.gateName}. Recommended parking zone: ${targetParkingZone.name}. Session ${session.id} created.`;
     setMessage(msg);
+    setGuidance(routeGuidance);
     addLog(user.id, "ENTRY_APPROVED", session.id, msg);
   }
 
@@ -819,6 +1171,7 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
     if (!activeSession) {
       const msg = "Exit denied: no active parking session was found.";
       setMessage(msg);
+      setGuidance(null);
       addLog(user.id, "EXIT_DENIED", user.id, msg);
       return;
     }
@@ -827,6 +1180,7 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
 
     if (!hoursCheck.allowed) {
       setMessage(hoursCheck.message);
+      setGuidance(null);
       addLog(user.id, "EXIT_DENIED_OUT_OF_HOURS", activeSession.id, hoursCheck.message);
       return;
     }
@@ -845,17 +1199,32 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
       createdAt: new Date().toISOString(),
     };
 
+    const exitGate = getBestExitGate(activeSession, zones, user);
+    const exitGuidance = createExitGuidance(activeSession, exitGate);
+
     setPayments((prev) => [payment, ...prev]);
     setSessions((prev) =>
       prev.map((s) =>
         s.id === activeSession.id
-          ? { ...s, status: "Closed", exitTime: new Date().toISOString(), paymentId: payment.id }
+          ? { ...s, status: "Closed", exitTime: new Date().toISOString(), paymentId: payment.id, exitGateId: exitGate?.id, exitGateName: exitGate?.gateName }
           : s
       )
     );
-    setZones((prev) => prev.map((z) => z.id === activeSession.zoneId ? { ...z, occupied: Math.max(0, z.occupied - 1) } : z));
-    const msg = `Exit completed. Fee: ${amount.toLocaleString()} VND. Payment status: ${payment.status}.`;
+
+    setZones((prev) =>
+      prev.map((z) =>
+        z.id === activeSession.zoneId
+          ? updateParkingZoneInGate(z, activeSession.targetParkingZoneId, (parkingZone) => ({
+              ...parkingZone,
+              occupied: Math.max(0, parkingZone.occupied - 1),
+            }))
+          : z
+      )
+    );
+
+    const msg = `Exit completed via ${exitGate?.gateName || activeSession.gateName}. Fee: ${amount.toLocaleString()} VND. Payment status: ${payment.status}.`;
     setMessage(msg);
+    setGuidance(exitGuidance);
     addLog(user.id, "EXIT_COMPLETED", activeSession.id, msg);
   }
 
@@ -895,7 +1264,8 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
           {activeSession ? (
             <div className="session-box">
               <p><strong>Session:</strong> {activeSession.id}</p>
-              <p><strong>Gate:</strong> {activeSession.gateName}</p>
+              <p><strong>Entry gate:</strong> {activeSession.gateName}</p>
+              <p><strong>Assigned zone:</strong> {activeSession.targetParkingZoneName || activeSession.zoneName}</p>
               <p><strong>Entry time:</strong> {new Date(activeSession.entryTime).toLocaleString("vi-VN")}</p>
             </div>
           ) : (
@@ -906,6 +1276,7 @@ function EntryExitPage({ user, zones, setZones, sessions, setSessions, payments,
       </div>
 
       {message && <div className="result-box">{message}</div>}
+      <GuidancePanel guidance={guidance} />
     </section>
   );
 }
@@ -966,12 +1337,23 @@ function TemporaryAccessPage({
       return;
     }
 
+    const targetParkingZone = getBestEntryParkingZone(zone);
+
+    if (!targetParkingZone) {
+      const msg = `${zone.gateName} has no active parking zone available. Temporary access denied.`;
+      setMessage(msg);
+      addLog(user.id, "TEMPORARY_ACCESS_DENIED_NO_ACTIVE_ZONE", zone.id, msg);
+      return;
+    }
+
     const ticket = {
       id: makeId("TKT"),
       visitorName,
       plate,
       zoneId: zone.id,
       gateName: zone.gateName,
+      targetParkingZoneId: targetParkingZone.id,
+      targetParkingZoneName: targetParkingZone.name,
       status: "Active",
       issuedAt: new Date().toISOString(),
       createdBy: user.id,
@@ -985,6 +1367,9 @@ function TemporaryAccessPage({
       zoneId: zone.id,
       zoneName: zone.name,
       gateName: zone.gateName,
+      targetParkingZoneId: targetParkingZone.id,
+      targetParkingZoneName: targetParkingZone.name,
+      targetParkingZonePoint: targetParkingZone.mapPoint,
       entryTime: new Date().toISOString(),
       exitTime: null,
       status: "Active",
@@ -998,12 +1383,15 @@ function TemporaryAccessPage({
     setZones((prev) =>
       prev.map((z) =>
         z.id === zone.id
-          ? { ...z, occupied: Math.min(z.capacity, z.occupied + 1) }
+          ? updateParkingZoneInGate(z, targetParkingZone.id, (parkingZone) => ({
+              ...parkingZone,
+              occupied: Math.min(parkingZone.capacity, parkingZone.occupied + 1),
+            }))
           : z
       )
     );
 
-    const msg = `Temporary ticket ${ticket.id} issued for ${visitorName} at ${zone.gateName}.`;
+    const msg = `Temporary ticket ${ticket.id} issued for ${visitorName} at ${zone.gateName}. Recommended parking zone: ${targetParkingZone.name}.`;
     setMessage(msg);
     addLog(user.id, "TEMPORARY_TICKET_ISSUED", ticket.id, msg);
   }
@@ -1057,7 +1445,10 @@ function TemporaryAccessPage({
     setZones((prev) =>
       prev.map((z) =>
         z.id === session.zoneId
-          ? { ...z, occupied: Math.max(0, z.occupied - 1) }
+          ? updateParkingZoneInGate(z, session.targetParkingZoneId, (parkingZone) => ({
+              ...parkingZone,
+              occupied: Math.max(0, parkingZone.occupied - 1),
+            }))
           : z
       )
     );
@@ -1248,71 +1639,151 @@ function OperatorDashboard({ zones, sessions, tickets, alerts }) {
 }
 
 function SensorSimulationPage({ zones, setZones, alerts, setAlerts, addLog }) {
-  function increase(zoneId) {
-    setZones((prev) =>
-      prev.map((z) =>
-        z.id === zoneId
-          ? {
-              ...z,
-              occupied: Math.min(z.capacity, z.occupied + 1),
-              deviceStatus: "Online",
-            }
-          : z
-      )
-    );
-    addLog("IOT-GATEWAY", "SENSOR_UPDATE", zoneId, "Simulated occupied slot update.");
+  const [selectedGateId, setSelectedGateId] = useState(zones[0]?.id || "GATE-1");
+  const selectedGate = zones.find((zone) => zone.id === selectedGateId) || zones[0];
+  const parkingZones = getParkingZones(selectedGate);
+  const [selectedParkingZoneId, setSelectedParkingZoneId] = useState(parkingZones[0]?.id || "");
+  const selectedParkingZone =
+    parkingZones.find((zone) => zone.id === selectedParkingZoneId) || parkingZones[0];
+  const selectedSensors = getParkingZoneSensors(selectedParkingZone);
+  const [selectedSensorId, setSelectedSensorId] = useState(selectedSensors[0]?.id || "");
+  const selectedSensor =
+    selectedSensors.find((sensor) => sensor.id === selectedSensorId) || selectedSensors[0];
+  const selectedSensorCounts = getSensorCounts(selectedParkingZone);
+
+  function handleGateChange(gateId) {
+    const nextGate = zones.find((zone) => zone.id === gateId);
+    const nextParkingZone = getParkingZones(nextGate)[0];
+    const nextSensor = getParkingZoneSensors(nextParkingZone)[0];
+    setSelectedGateId(gateId);
+    setSelectedParkingZoneId(nextParkingZone?.id || "");
+    setSelectedSensorId(nextSensor?.id || "");
   }
 
-  function decrease(zoneId) {
-    setZones((prev) =>
-      prev.map((z) =>
-        z.id === zoneId
-          ? {
-              ...z,
-              occupied: Math.max(0, z.occupied - 1),
-              deviceStatus: "Online",
-            }
-          : z
-      )
-    );
-    addLog("IOT-GATEWAY", "SENSOR_UPDATE", zoneId, "Simulated available slot update.");
+  function handleParkingZoneChange(parkingZoneId) {
+    const nextParkingZone = parkingZones.find((zone) => zone.id === parkingZoneId);
+    const nextSensor = getParkingZoneSensors(nextParkingZone)[0];
+    setSelectedParkingZoneId(parkingZoneId);
+    setSelectedSensorId(nextSensor?.id || "");
   }
 
-  function fault(zone) {
+  function updateSelectedParkingZone(updater, action, message) {
+    if (!selectedGate || !selectedParkingZone) return;
+
+    setZones((prev) =>
+      prev.map((gate) =>
+        gate.id === selectedGate.id
+          ? updateParkingZoneInGate(gate, selectedParkingZone.id, updater)
+          : gate
+      )
+    );
+
+    addLog("IOT-GATEWAY", action, selectedParkingZone.id, message);
+  }
+
+  function updateSelectedSensor(sensorUpdater, action, message) {
+    if (!selectedGate || !selectedParkingZone || !selectedSensor) return;
+
+    updateSelectedParkingZone((parkingZone) => {
+      const sensorNodes = getParkingZoneSensors(parkingZone).map((sensor) =>
+        sensor.id === selectedSensor.id
+          ? { ...sensorUpdater(sensor), lastEvent: message }
+          : sensor
+      );
+
+      return {
+        ...parkingZone,
+        sensorNodes,
+        sensorStatus: deriveZoneSensorStatus(sensorNodes),
+      };
+    }, action, message);
+  }
+
+  function freeSlot() {
+    if (!selectedSensor) return;
+
+    updateSelectedSensor(
+      (sensor) => ({ ...sensor, operationalStatus: "Active", slotStatus: "Empty" }),
+      "SENSOR_NODE_EMPTY",
+      `${selectedSensor.id} in ${selectedParkingZone.name} is active and reports no vehicle.`
+    );
+
+    if (selectedSensor.slotStatus === "Occupied") {
+      updateSelectedParkingZone(
+        (parkingZone) => ({ ...parkingZone, occupied: Math.max(0, parkingZone.occupied - 1) }),
+        "SENSOR_UPDATE_ZONE_FREE",
+        `${selectedParkingZone.name} occupancy decreased by one slot.`
+      );
+    }
+  }
+
+  function occupySlot() {
+    if (!selectedSensor) return;
+
+    updateSelectedSensor(
+      (sensor) => ({ ...sensor, operationalStatus: "Active", slotStatus: "Occupied" }),
+      "SENSOR_NODE_OCCUPIED",
+      `${selectedSensor.id} in ${selectedParkingZone.name} is active and reports a vehicle.`
+    );
+
+    if (selectedSensor.slotStatus === "Empty") {
+      updateSelectedParkingZone(
+        (parkingZone) => ({ ...parkingZone, occupied: Math.min(parkingZone.capacity, parkingZone.occupied + 1) }),
+        "SENSOR_UPDATE_ZONE_OCCUPIED",
+        `${selectedParkingZone.name} occupancy increased by one slot.`
+      );
+    }
+  }
+
+  function markFault() {
+    if (!selectedGate || !selectedParkingZone || !selectedSensor) return;
+
     const alert = {
       id: makeId("ALT"),
-      zoneId: zone.id,
-      title: `${zone.gateName} gateway warning`,
-      message: `Sensor or gateway fault detected at ${zone.name}. Availability is using latest confirmed data.`,
+      zoneId: selectedGate.id,
+      parkingZoneId: selectedParkingZone.id,
+      sensorId: selectedSensor.id,
+      title: `${selectedSensor.id} sensor fault`,
+      message: `Sensor fault detected at ${selectedSensor.id} in ${selectedParkingZone.name}. Latest confirmed availability is preserved.`,
       createdAt: nowText(),
       status: "Active",
     };
 
     setAlerts((prev) => [alert, ...prev]);
 
-    setZones((prev) =>
-      prev.map((z) =>
-        z.id === zone.id ? { ...z, deviceStatus: "Fault" } : z
-      )
+    updateSelectedSensor(
+      (sensor) => ({ ...sensor, operationalStatus: "Fault" }),
+      "SENSOR_NODE_FAULT",
+      alert.message
     );
-
-    addLog("IOT-GATEWAY", "DEVICE_FAULT", zone.id, alert.message);
   }
 
-  function recover(zone) {
-    setZones((prev) =>
-      prev.map((z) =>
-        z.id === zone.id ? { ...z, deviceStatus: "Online" } : z
-      )
+  function markMaintenance() {
+    if (!selectedSensor) return;
+
+    updateSelectedSensor(
+      (sensor) => ({ ...sensor, operationalStatus: "Maintenance" }),
+      "SENSOR_NODE_MAINTENANCE",
+      `${selectedSensor.id} in ${selectedParkingZone.name} marked as maintenance.`
+    );
+  }
+
+  function recoverZone() {
+    if (!selectedGate || !selectedParkingZone || !selectedSensor) return;
+
+    updateSelectedSensor(
+      (sensor) => ({ ...sensor, operationalStatus: "Active" }),
+      "SENSOR_NODE_RECOVERED",
+      `${selectedSensor.id} in ${selectedParkingZone.name} recovered and returned to active monitoring.`
     );
 
     setAlerts((prev) =>
-      prev.map((a) =>
-        a.zoneId === zone.id ? { ...a, status: "Resolved" } : a
+      prev.map((alert) =>
+        alert.sensorId === selectedSensor.id || alert.parkingZoneId === selectedParkingZone.id
+          ? { ...alert, status: "Resolved" }
+          : alert
       )
     );
-
-    addLog("IOT-GATEWAY", "DEVICE_RECOVERED", zone.id, `${zone.gateName} device recovered.`);
   }
 
   return (
@@ -1320,59 +1791,185 @@ function SensorSimulationPage({ zones, setZones, alerts, setAlerts, addLog }) {
       <div className="section-head">
         <div>
           <p className="eyebrow">IoT simulation</p>
-          <h2>Sensor and Gateway Simulation</h2>
+          <h2>Zone Sensor and Gateway Monitoring</h2>
         </div>
       </div>
 
       <div className="zone-grid">
-        {zones.map((z) => (
-          <div className="zone-card" key={z.id} style={zoneStyle(z)}>
-            <div className="zone-card-head">
-              <h3>{z.name}</h3>
-              <span
-                className={
-                  z.deviceStatus === "Fault"
-                    ? "status danger"
-                    : "status available"
-                }
-              >
-                {z.deviceStatus}
-              </span>
-            </div>
+        {zones.map((gate) => {
+          const gateParkingZones = getParkingZones(gate);
+          const activeCount = gateParkingZones.filter((zone) => zone.sensorStatus === "Active").length;
+          const faultCount = gateParkingZones.filter((zone) => zone.sensorStatus === "Fault").length;
+          const maintenanceCount = gateParkingZones.filter((zone) => zone.sensorStatus === "Maintenance").length;
 
-            <p className="zone-location">{z.gateName} · {z.location}</p>
-            <p className="zone-address">{z.address}</p>
-
-            <span className={statusClass(zoneStatus(z))}>
-              {zoneStatus(z)}
-            </span>
-
-            <p>
-              <strong>{z.occupied}</strong> occupied / {z.capacity}
-            </p>
-
-            {z.deviceStatus === "Fault" && (
-              <div className="fault-box">
-                Sensor or gateway fault detected. Latest confirmed availability is preserved.
+          return (
+            <button
+              key={gate.id}
+              type="button"
+              className={selectedGateId === gate.id ? "sensor-gate-card selected" : "sensor-gate-card"}
+              onClick={() => handleGateChange(gate.id)}
+            >
+              <div className="zone-card-head">
+                <h3>{gate.gateName}</h3>
+                <span className={gate.deviceStatus === "Fault" ? "status danger" : gate.deviceStatus === "Maintenance" ? "status warning" : "status available"}>
+                  {gate.deviceStatus}
+                </span>
               </div>
-            )}
+              <p>{gate.name}</p>
+              <p><strong>{gate.capacity - gate.occupied}</strong> available / {gate.capacity} slots</p>
+              <div className="sensor-summary-row">
+                <span className="status available">Active {activeCount}</span>
+                <span className="status danger">Fault {faultCount}</span>
+                <span className="status warning">Maintenance {maintenanceCount}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-            <div className="button-row">
-              <button className="btn secondary" onClick={() => decrease(z.id)}>
-                - Free slot
-              </button>
-              <button className="btn secondary" onClick={() => increase(z.id)}>
-                + Occupy slot
-              </button>
-              <button className="btn danger" onClick={() => fault(z)}>
-                Fault
-              </button>
-              <button className="btn secondary" onClick={() => recover(z)}>
-                Recover
-              </button>
+      <div className="two-col">
+        <div className="panel">
+          <h3>Selected Gate and Zone</h3>
+
+          <label>Gate</label>
+          <select value={selectedGate?.id || ""} onChange={(e) => handleGateChange(e.target.value)}>
+            {zones.map((gate) => (
+              <option key={gate.id} value={gate.id}>
+                {gate.gateName} — {gate.name} — {gate.deviceStatus}
+              </option>
+            ))}
+          </select>
+
+          <label>Parking zone</label>
+          <select
+            value={selectedParkingZone?.id || ""}
+            onChange={(e) => handleParkingZoneChange(e.target.value)}
+          >
+            {parkingZones.map((parkingZone) => {
+              const counts = getSensorCounts(parkingZone);
+              return (
+                <option key={parkingZone.id} value={parkingZone.id}>
+                  {parkingZone.name} — {parkingZone.sensorStatus} — Empty {counts.empty} / Occupied {counts.occupied} / Maintenance {counts.maintenance}
+                </option>
+              );
+            })}
+          </select>
+
+          {selectedParkingZone && (
+            <div className="sensor-detail-card">
+              <div className="zone-card-head">
+                <h3>{selectedParkingZone.name}</h3>
+                <span className={sensorOperationalClass(selectedParkingZone.sensorStatus)}>
+                  {selectedParkingZone.sensorStatus}
+                </span>
+              </div>
+              <p><strong>Gate:</strong> {selectedGate.gateName}</p>
+              <p><strong>Occupied:</strong> {selectedParkingZone.occupied}/{selectedParkingZone.capacity}</p>
+              <p><strong>Available:</strong> {getParkingZoneAvailable(selectedParkingZone)}</p>
+              <p><strong>Status:</strong> {getParkingZoneStatus(selectedParkingZone)}</p>
+
+              <div className="sensor-summary-row compact-summary">
+                <span className="status available">Active {selectedSensorCounts.active}</span>
+                <span className="status available">Empty {selectedSensorCounts.empty}</span>
+                <span className="status info">Occupied {selectedSensorCounts.occupied}</span>
+                <span className="status danger">Fault {selectedSensorCounts.fault}</span>
+                <span className="status warning">Maintenance {selectedSensorCounts.maintenance}</span>
+              </div>
+
+              <label>Sensor node</label>
+              <select
+                value={selectedSensor?.id || ""}
+                onChange={(e) => setSelectedSensorId(e.target.value)}
+              >
+                {selectedSensors.map((sensor) => (
+                  <option key={sensor.id} value={sensor.id}>
+                    {sensor.id} — {sensor.operationalStatus} — {sensor.slotStatus}
+                  </option>
+                ))}
+              </select>
+
+              {selectedSensor && (
+                <div className="sensor-node-detail">
+                  <div>
+                    <span>Selected sensor</span>
+                    <strong>{selectedSensor.id}</strong>
+                  </div>
+                  <span className={sensorOperationalClass(selectedSensor.operationalStatus)}>
+                    {selectedSensor.operationalStatus}
+                  </span>
+                  <span className={sensorSlotClass(selectedSensor.slotStatus)}>
+                    {selectedSensor.slotStatus}
+                  </span>
+                  <small>{selectedSensor.lastEvent}</small>
+                </div>
+              )}
+
+              {selectedParkingZone.sensorStatus === "Fault" && (
+                <div className="fault-box">
+                  At least one sensor in this zone is faulty. Latest confirmed availability is preserved.
+                </div>
+              )}
+
+              {selectedParkingZone.sensorStatus === "Maintenance" && (
+                <div className="maintenance-box">
+                  At least one sensor in this zone is under maintenance. Operator should avoid routing new users to the affected slot.
+                </div>
+              )}
             </div>
+          )}
+
+          <div className="button-row">
+            <button className="btn secondary" onClick={freeSlot}>Set Empty</button>
+            <button className="btn secondary" onClick={occupySlot}>Set Occupied</button>
+            <button className="btn danger" onClick={markFault}>Fault</button>
+            <button className="btn secondary" onClick={markMaintenance}>Maintenance</button>
+            <button className="btn primary" onClick={recoverZone}>Recover</button>
           </div>
-        ))}
+        </div>
+
+        <div className="panel">
+          <h3>Zones under {selectedGate?.gateName}</h3>
+          <div className="sensor-zone-list">
+            {parkingZones.map((parkingZone) => (
+              <button
+                type="button"
+                key={parkingZone.id}
+                className={selectedParkingZone?.id === parkingZone.id ? "sensor-zone-row selected" : "sensor-zone-row"}
+                onClick={() => handleParkingZoneChange(parkingZone.id)}
+              >
+                <div>
+                  <strong>{parkingZone.name}</strong>
+                  <span>{parkingZone.guidanceNote}</span>
+                </div>
+                <span className={parkingZone.sensorStatus === "Fault" ? "status danger" : parkingZone.sensorStatus === "Maintenance" ? "status warning" : "status available"}>
+                  {parkingZone.sensorStatus}
+                </span>
+                <span>{getParkingZoneAvailable(parkingZone)}/{parkingZone.capacity} available</span>
+              </button>
+            ))}
+          </div>
+
+          <h3>Sensor nodes in selected zone</h3>
+          <div className="sensor-node-grid">
+            {selectedSensors.map((sensor) => (
+              <button
+                type="button"
+                key={sensor.id}
+                className={selectedSensor?.id === sensor.id ? "sensor-node-card selected" : "sensor-node-card"}
+                onClick={() => setSelectedSensorId(sensor.id)}
+              >
+                <strong>{sensor.name}</strong>
+                <span>{sensor.id}</span>
+                <span className={sensorOperationalClass(sensor.operationalStatus)}>
+                  {sensor.operationalStatus}
+                </span>
+                <span className={sensorSlotClass(sensor.slotStatus)}>
+                  {sensor.slotStatus}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="panel">
@@ -1381,13 +1978,11 @@ function SensorSimulationPage({ zones, setZones, alerts, setAlerts, addLog }) {
           <p className="muted">No device alerts.</p>
         ) : (
           <ul className="alert-list">
-            {alerts.map((a) => (
-              <li key={a.id}>
-                <strong>
-                  {a.title} — {a.status}
-                </strong>
-                <span>{a.message}</span>
-                <span>{a.createdAt}</span>
+            {alerts.map((alert) => (
+              <li key={alert.id}>
+                <strong>{alert.title} — {alert.status}</strong>
+                <span>{alert.message}</span>
+                <span>{alert.createdAt}</span>
               </li>
             ))}
           </ul>
